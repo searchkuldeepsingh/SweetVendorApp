@@ -1,0 +1,68 @@
+# Miscellaneous
+.DS_Store
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+*.iml
+
+# Flutter
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+flutter_build/
+
+# Android
+android/.gradle
+android/.idea/
+android/build/
+android/app/debug
+android/app/profile
+android/app/release
+
+# iOS
+ios/.symlinks/
+ios/.generated/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Pods/
+ios/Podfile.lock
+
+# Web
+web/
+
+# VS Code
+.vscode/
+*.swp
+*.swo
+*~
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+*.swp
+.env.local
+.env.*.local
+
+# Coverage
+coverage/
+
+# Dependencies
+pubspec.lock
+.packages
+*.generated.dart
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.local
