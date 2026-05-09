@@ -12,6 +12,7 @@ class AppSideDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final isVendor = authProvider.isVendor;
+    final isAgent = authProvider.isAgent;
 
     return Drawer(
       child: SafeArea(
@@ -65,7 +66,11 @@ class AppSideDrawer extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    isVendor ? 'Vendor Account' : 'Customer Account',
+                    isVendor
+                        ? 'Vendor Account'
+                        : isAgent
+                            ? 'Agent Account'
+                            : 'Customer Account',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.9),
                       fontSize: 14,
@@ -86,9 +91,13 @@ class AppSideDrawer extends StatelessWidget {
                     ),
                   _DrawerTile(
                     icon: Icons.receipt_long_outlined,
-                    label: isVendor ? 'Order History' : 'My Orders',
-                    onTap: () =>
-                        _go(context, isVendor ? '/vendor-orders' : '/my-orders'),
+                    label: isVendor
+                        ? 'Order History'
+                        : isAgent
+                            ? 'Agent Order History'
+                            : 'My Orders',
+                    onTap: () => _go(
+                        context, isVendor ? '/vendor-orders' : '/my-orders'),
                   ),
                   if (!isVendor)
                     _DrawerTile(

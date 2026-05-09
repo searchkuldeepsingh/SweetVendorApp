@@ -29,8 +29,8 @@ ios/Flutter/Flutter.podspec
 ios/Pods/
 ios/Podfile.lock
 
-# Web
-web/
+# Nested sample/platform output
+/chrome/web/
 
 # VS Code
 .vscode/

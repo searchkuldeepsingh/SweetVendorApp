@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/order_model.dart';
 import '../services/auth_provider.dart';
 import '../services/cart_provider.dart';
 import '../services/orders_provider.dart';
@@ -16,11 +17,13 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _customerNameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
 
   @override
   void dispose() {
+    _customerNameController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
     super.dispose();
@@ -34,11 +37,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final authProvider = context.read<AuthProvider>();
     final cartProvider = context.read<CartProvider>();
     final ordersProvider = context.read<OrdersProvider>();
+    final isAgentOrder = authProvider.isAgent;
+    final customerName = isAgentOrder
+        ? _customerNameController.text.trim()
+        : authProvider.currentUsername;
 
-    ordersProvider.placeOrder(
-      customerName: authProvider.currentUsername,
+    await ordersProvider.placeOrder(
+      customerName: customerName,
       customerPhone: _phoneController.text.trim(),
       deliveryAddress: _addressController.text.trim(),
+      placedByUsername: authProvider.currentUsername,
+      placedByRole:
+          isAgentOrder ? UserOrderSource.agent : UserOrderSource.customer,
       cartItems: cartProvider.itemsList,
       totalAmount: cartProvider.totalPrice,
     );
@@ -56,8 +66,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             borderRadius: BorderRadius.circular(24),
           ),
           title: const Text('Order Confirmed'),
-          content: const Text(
-            'Your cash on delivery order has been placed successfully. It is now visible on the vendor side.',
+          content: Text(
+            isAgentOrder
+                ? 'The cash on delivery order has been placed for $customerName and is now visible on the vendor side.'
+                : 'Your cash on delivery order has been placed successfully. It is now visible on the vendor side.',
           ),
           actions: [
             TextButton(
@@ -82,6 +94,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final cartProvider = context.watch<CartProvider>();
+    final isAgent = authProvider.isAgent;
 
     if (cartProvider.itemsList.isEmpty) {
       return Scaffold(
@@ -169,20 +182,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              TextFormField(
-                initialValue: authProvider.currentUsername,
-                readOnly: true,
-                decoration: _inputDecoration(
-                  'Customer Name',
-                  Icons.person_outline,
+              if (isAgent)
+                TextFormField(
+                  controller: _customerNameController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: _inputDecoration(
+                    'Customer Name',
+                    Icons.person_outline,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().length < 2) {
+                      return 'Enter customer name';
+                    }
+                    return null;
+                  },
+                )
+              else
+                TextFormField(
+                  initialValue: authProvider.currentUsername,
+                  readOnly: true,
+                  decoration: _inputDecoration(
+                    'Customer Name',
+                    Icons.person_outline,
+                  ),
                 ),
-              ),
               const SizedBox(height: 14),
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: _inputDecoration(
-                  'Phone Number',
+                  'Mobile Number',
                   Icons.phone_outlined,
                 ),
                 validator: (value) {

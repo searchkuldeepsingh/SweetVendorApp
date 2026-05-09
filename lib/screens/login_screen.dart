@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../services/auth_provider.dart';
 
-/// Shared login screen with tabs for customer and vendor access.
+/// Shared login screen with role-based access.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
@@ -19,17 +19,27 @@ class _LoginScreenState extends State<LoginScreen> {
   UserRole _selectedRole = UserRole.customer;
 
   @override
+  void initState() {
+    super.initState();
+    _fillDemoCredentials();
+  }
+
+  @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _switchRole(int index) {
+  void _fillDemoCredentials() {
+    _usernameController.text = AuthProvider.demoUsername(_selectedRole);
+    _passwordController.text = AuthProvider.demoPassword(_selectedRole);
+  }
+
+  void _switchRole(UserRole role) {
     setState(() {
-      _selectedRole = UserRole.values[index];
-      _usernameController.clear();
-      _passwordController.clear();
+      _selectedRole = role;
+      _fillDemoCredentials();
     });
   }
 
@@ -46,9 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (!loggedIn) {
-      final roleLabel = _selectedRole == UserRole.customer
-          ? 'customer'
-          : 'vendor';
+      final roleLabel = AuthProvider.roleLabel(_selectedRole).toLowerCase();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
@@ -61,32 +69,35 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     final targetRoute =
-        _selectedRole == UserRole.customer ? '/home' : '/vendor-orders';
+        _selectedRole == UserRole.vendor ? '/vendor-orders' : '/home';
     Navigator.of(context).pushReplacementNamed(targetRoute);
   }
 
   @override
   Widget build(BuildContext context) {
-    final isCustomer = _selectedRole == UserRole.customer;
+    final roleLabel = AuthProvider.roleLabel(_selectedRole);
+    final roleIcon = _roleIcon(_selectedRole);
+    final roleTitle = _roleTitle(_selectedRole);
+    final roleSubtitle = _roleSubtitle(_selectedRole);
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFE6CF),
       body: Stack(
         children: [
-          Positioned(
+          const Positioned(
             top: -120,
             left: -40,
             child: _GlowOrb(
               size: 260,
-              colors: const [Color(0xFFFFC27A), Color(0xFFFF8C42)],
+              colors: [Color(0xFFFFC27A), Color(0xFFFF8C42)],
             ),
           ),
-          Positioned(
+          const Positioned(
             bottom: -130,
             right: -30,
             child: _GlowOrb(
               size: 280,
-              colors: const [Color(0xFFFFD9B5), Color(0xFFFFB067)],
+              colors: [Color(0xFFFFD9B5), Color(0xFFFFB067)],
             ),
           ),
           SafeArea(
@@ -116,217 +127,193 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                            Container(
-                              width: 78,
-                              height: 78,
-                              margin: const EdgeInsets.only(bottom: 18),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFFFF7B34),
-                                    Color(0xFFFF5A1F),
-                                  ],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.deepOrange.withOpacity(0.25),
-                                    blurRadius: 18,
-                                    offset: const Offset(0, 10),
-                                  ),
+                          Container(
+                            width: 78,
+                            height: 78,
+                            margin: const EdgeInsets.only(bottom: 18),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFFFF7B34),
+                                  Color(0xFFFF5A1F),
                                 ],
                               ),
-                              child: const Icon(
-                                Icons.cake_rounded,
-                                color: Colors.white,
-                                size: 38,
-                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.deepOrange.withOpacity(0.25),
+                                  blurRadius: 18,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
                             ),
-                            const Text(
-                              'Welcome to Sweet Mart',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 31,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF2F2623),
-                              ),
+                            child: const Icon(
+                              Icons.cake_rounded,
+                              color: Colors.white,
+                              size: 38,
                             ),
-                            const SizedBox(height: 10),
-                            const Text(
-                              'Choose a role and continue with the right dashboard.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 15,
-                                height: 1.5,
-                                color: Color(0xFF7F6B63),
-                              ),
+                          ),
+                          const Text(
+                            'Welcome to Sweet Mart',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 31,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF2F2623),
                             ),
-                            const SizedBox(height: 24),
-                            Container(
-                              padding: const EdgeInsets.all(7),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFF2DF),
-                                borderRadius: BorderRadius.circular(22),
-                                border: Border.all(
-                                  color: const Color(0xFFFFE2BF),
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            'Choose a role and continue with the right dashboard.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              height: 1.5,
+                              color: Color(0xFF7F6B63),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          DropdownButtonFormField<UserRole>(
+                            value: _selectedRole,
+                            decoration: _inputDecoration(
+                              'Login as',
+                              roleIcon,
+                            ),
+                            borderRadius: BorderRadius.circular(18),
+                            icon: const Icon(Icons.keyboard_arrow_down),
+                            items: UserRole.values
+                                .map(
+                                  (role) => DropdownMenuItem<UserRole>(
+                                    value: role,
+                                    child: Text(AuthProvider.roleLabel(role)),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (role) {
+                              if (role != null) {
+                                _switchRole(role);
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 24),
+                          _InfoBanner(
+                            icon: roleIcon,
+                            title: roleTitle,
+                            subtitle: roleSubtitle,
+                          ),
+                          const SizedBox(height: 22),
+                          TextFormField(
+                            controller: _usernameController,
+                            decoration: _inputDecoration(
+                              '$roleLabel Username',
+                              Icons.person_outline,
+                            ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Enter your username';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            decoration: _inputDecoration(
+                              '$roleLabel Password',
+                              Icons.lock_outline,
+                              suffix: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
                                 ),
                               ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: _RoleSegment(
-                                      title: 'Customer',
-                                      icon: Icons.shopping_bag_outlined,
-                                      isSelected: isCustomer,
-                                      onTap: () => _switchRole(0),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: _RoleSegment(
-                                      title: 'Vendor',
-                                      icon: Icons.storefront_outlined,
-                                      isSelected: !isCustomer,
-                                      onTap: () => _switchRole(1),
-                                    ),
-                                  ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Enter your password';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 22),
+                          ElevatedButton(
+                            onPressed: _submitLogin,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.deepOrange,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                            ),
+                            child: Text(
+                              'Login as $roleLabel',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 22),
+                          Container(
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFFFFF5E7),
+                                  Color(0xFFFFF0D7),
                                 ],
                               ),
+                              borderRadius: BorderRadius.circular(22),
+                              border:
+                                  Border.all(color: const Color(0xFFFFD8A8)),
                             ),
-                            const SizedBox(height: 24),
-                            _InfoBanner(
-                              icon: isCustomer
-                                  ? Icons.shopping_bag_outlined
-                                  : Icons.receipt_long_outlined,
-                              title: isCustomer
-                                  ? 'Order sweets in a few taps'
-                                  : 'Track incoming orders instantly',
-                              subtitle: isCustomer
-                                  ? 'Browse sweets, add to cart, and place a cash on delivery order.'
-                                  : 'Monitor customer orders with delivery details and payment mode.',
-                            ),
-                            const SizedBox(height: 22),
-                            TextFormField(
-                              controller: _usernameController,
-                              decoration: _inputDecoration(
-                                isCustomer
-                                    ? 'Customer Username'
-                                    : 'Vendor Username',
-                                Icons.person_outline,
-                              ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Enter your username';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _passwordController,
-                              obscureText: _obscurePassword,
-                              decoration: _inputDecoration(
-                                isCustomer
-                                    ? 'Customer Password'
-                                    : 'Vendor Password',
-                                Icons.lock_outline,
-                                suffix: IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
-                                  },
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Demo Credentials',
+                                  style: TextStyle(
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.deepOrange,
                                   ),
                                 ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Enter your password';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 22),
-                            ElevatedButton(
-                              onPressed: _submitLogin,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.deepOrange,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                padding: const EdgeInsets.symmetric(vertical: 18),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                              ),
-                              child: Text(
-                                isCustomer
-                                    ? 'Login as Customer'
-                                    : 'Login as Vendor',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 22),
-                            Container(
-                              padding: const EdgeInsets.all(18),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFFFFF5E7),
-                                    Color(0xFFFFF0D7),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(22),
-                                border: Border.all(color: const Color(0xFFFFD8A8)),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Demo Credentials',
-                                    style: TextStyle(
-                                      fontSize: 19,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.deepOrange,
-                                    ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Username: ${AuthProvider.demoUsername(_selectedRole)}',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    color: Color(0xFF4A3B35),
                                   ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    isCustomer
-                                        ? 'Username: ${AuthProvider.customerUsername}'
-                                        : 'Username: ${AuthProvider.vendorUsername}',
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      color: Color(0xFF4A3B35),
-                                    ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Password: ${AuthProvider.demoPassword(_selectedRole)}',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    color: Color(0xFF4A3B35),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    isCustomer
-                                        ? 'Password: ${AuthProvider.customerPassword}'
-                                        : 'Password: ${AuthProvider.vendorPassword}',
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      color: Color(0xFF4A3B35),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
             ),
+          ),
         ],
       ),
     );
@@ -364,6 +351,33 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
+  static IconData _roleIcon(UserRole role) {
+    return switch (role) {
+      UserRole.customer => Icons.shopping_bag_outlined,
+      UserRole.vendor => Icons.storefront_outlined,
+      UserRole.agent => Icons.support_agent_outlined,
+    };
+  }
+
+  static String _roleTitle(UserRole role) {
+    return switch (role) {
+      UserRole.customer => 'Order sweets in a few taps',
+      UserRole.vendor => 'Track incoming orders instantly',
+      UserRole.agent => 'Order for customers',
+    };
+  }
+
+  static String _roleSubtitle(UserRole role) {
+    return switch (role) {
+      UserRole.customer =>
+        'Browse sweets, add to cart, and place a cash on delivery order.',
+      UserRole.vendor =>
+        'Monitor customer orders with delivery details and payment mode.',
+      UserRole.agent =>
+        'Place customer orders with their name, mobile number, and delivery address.',
+    };
+  }
 }
 
 class _GlowOrb extends StatelessWidget {
@@ -383,81 +397,6 @@ class _GlowOrb extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: RadialGradient(colors: colors),
-      ),
-    );
-  }
-}
-
-class _RoleSegment extends StatelessWidget {
-  const _RoleSegment({
-    required this.title,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final String title;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOut,
-      decoration: BoxDecoration(
-        gradient: isSelected
-            ? const LinearGradient(
-                colors: [
-                  Color(0xFFFF7B34),
-                  Color(0xFFFF5A1F),
-                ],
-              )
-            : null,
-        color: isSelected ? null : Colors.transparent,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: isSelected
-            ? [
-                BoxShadow(
-                  color: Colors.deepOrange.withOpacity(0.18),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ]
-            : null,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 18,
-                  color: isSelected ? Colors.white : Colors.deepOrange,
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    title,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.deepOrange,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

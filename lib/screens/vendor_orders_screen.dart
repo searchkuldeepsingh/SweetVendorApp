@@ -121,6 +121,11 @@ class _OrderCard extends StatelessWidget {
                   label: Text(_statusLabel(order.status)),
                   backgroundColor: Colors.green.shade50,
                 ),
+                if (order.placedByRole == UserOrderSource.agent)
+                  Chip(
+                    label: Text('Agent: ${order.placedByUsername}'),
+                    backgroundColor: Colors.purple.shade50,
+                  ),
               ],
             ),
             const SizedBox(height: 10),
@@ -130,7 +135,7 @@ class _OrderCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Phone: ${order.customerPhone}',
+              'Mobile: ${order.customerPhone}',
               style: const TextStyle(color: Colors.black87),
             ),
             const SizedBox(height: 6),

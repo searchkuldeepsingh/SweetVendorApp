@@ -18,6 +18,30 @@ class Sweet {
     this.reviewCount = 0,
   });
 
+  factory Sweet.fromJson(Map<String, dynamic> json) {
+    return Sweet(
+      id: json['id'].toString(),
+      name: json['name'] as String? ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0,
+      imageUrl: json['image_url'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      rating: (json['rating'] as num?)?.toDouble() ?? 4.5,
+      reviewCount: (json['review_count'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'price': price,
+      'image_url': imageUrl,
+      'description': description,
+      'rating': rating,
+      'review_count': reviewCount,
+    };
+  }
+
   /// Create a copy of Sweet with modified fields
   Sweet copyWith({
     String? id,
@@ -72,5 +96,6 @@ class CartItem {
   }
 
   @override
-  String toString() => 'CartItem(id: $id, quantity: $quantity, totalPrice: $totalPrice)';
+  String toString() =>
+      'CartItem(id: $id, quantity: $quantity, totalPrice: $totalPrice)';
 }

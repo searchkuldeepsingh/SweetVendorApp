@@ -12,10 +12,14 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final isVendor = authProvider.isVendor;
+    final isAgent = authProvider.isAgent;
+    final roleLabel = authProvider.currentRole == null
+        ? 'Customer'
+        : AuthProvider.roleLabel(authProvider.currentRole!);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isVendor ? 'Vendor Profile' : 'My Profile'),
+        title: Text(isVendor ? 'Vendor Profile' : '$roleLabel Profile'),
       ),
       drawer: const AppSideDrawer(),
       body: Padding(
@@ -55,7 +59,11 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    isVendor ? 'Vendor account' : 'Customer account',
+                    isVendor
+                        ? 'Vendor account'
+                        : isAgent
+                            ? 'Agent account'
+                            : 'Customer account',
                     style: const TextStyle(color: Colors.black54),
                   ),
                 ],
@@ -68,13 +76,15 @@ class ProfileScreen extends StatelessWidget {
             ),
             _ProfileItem(
               label: 'Role',
-              value: isVendor ? 'Vendor' : 'Customer',
+              value: roleLabel,
             ),
             _ProfileItem(
               label: 'Support',
               value: isVendor
                   ? 'Manage your sweet shop and incoming orders'
-                  : 'Browse sweets and place quick COD orders',
+                  : isAgent
+                      ? 'Order sweets on behalf of customers'
+                      : 'Browse sweets and place quick COD orders',
             ),
           ],
         ),

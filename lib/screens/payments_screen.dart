@@ -90,12 +90,10 @@ class _VendorPaymentsScreen extends StatelessWidget {
     final orders = provider.realOrders.isNotEmpty
         ? provider.realOrders
         : _sampleVendorOrders;
-    final receivedOrders = orders
-        .where((order) => order.status == OrderStatus.confirmed)
-        .toList();
-    final pendingOrders = orders
-        .where((order) => order.status != OrderStatus.confirmed)
-        .toList();
+    final receivedOrders =
+        orders.where((order) => order.status == OrderStatus.confirmed).toList();
+    final pendingOrders =
+        orders.where((order) => order.status != OrderStatus.confirmed).toList();
 
     return DefaultTabController(
       length: 2,
@@ -248,7 +246,8 @@ class _PaymentOrderCard extends StatelessWidget {
             if (isPending)
               Text('Delivery Status: ${_deliveryStatusLabel(order.status)}')
             else
-              Text('Payment Method: ${_paymentMethodLabel(order.paymentMethod)}'),
+              Text(
+                  'Payment Method: ${_paymentMethodLabel(order.paymentMethod)}'),
             const SizedBox(height: 8),
             Text('Date: ${_formatDate(order.placedAt)}'),
           ],
@@ -322,6 +321,8 @@ final List<SweetOrder> _sampleVendorOrders = [
     customerName: 'Aarav Shah',
     customerPhone: '9876543210',
     deliveryAddress: '12 Rose Avenue, Pune',
+    placedByUsername: 'Aarav Shah',
+    placedByRole: UserOrderSource.customer,
     items: const [],
     totalAmount: 540,
     placedAt: DateTime(2026, 4, 21),
@@ -333,6 +334,8 @@ final List<SweetOrder> _sampleVendorOrders = [
     customerName: 'Neha Verma',
     customerPhone: '9988776655',
     deliveryAddress: '44 Lake View, Delhi',
+    placedByUsername: 'sweetagent',
+    placedByRole: UserOrderSource.agent,
     items: const [],
     totalAmount: 320,
     placedAt: DateTime(2026, 4, 24),

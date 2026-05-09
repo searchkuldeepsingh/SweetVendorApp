@@ -38,7 +38,7 @@ class HomeScreen extends StatelessWidget {
                     top: 8,
                     child: Container(
                       padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.redAccent,
                         shape: BoxShape.circle,
                       ),
@@ -69,10 +69,10 @@ class HomeScreen extends StatelessWidget {
                 bottomRight: Radius.circular(24),
               ),
             ),
-            child: Column(
+            child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Discover Delicious Sweets',
                   style: TextStyle(
                     color: Colors.white,
@@ -80,8 +80,8 @@ class HomeScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
-                const Text(
+                SizedBox(height: 8),
+                Text(
                   'Pick your favorite treat and add it to the cart.',
                   style: TextStyle(
                     color: Colors.white70,

@@ -14,12 +14,18 @@ class CustomerOrdersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final allOrders = context.watch<OrdersProvider>().realOrders;
-    final orders = allOrders
-        .where((order) => order.customerName == authProvider.currentUsername)
-        .toList();
+    final orders = allOrders.where((order) {
+      if (authProvider.isAgent) {
+        return order.placedByUsername == authProvider.currentUsername;
+      }
+      return order.customerName == authProvider.currentUsername;
+    }).toList();
+    final isAgent = authProvider.isAgent;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Order History')),
+      appBar: AppBar(
+        title: Text(isAgent ? 'Agent Order History' : 'My Order History'),
+      ),
       drawer: const AppSideDrawer(),
       body: orders.isEmpty
           ? Center(
@@ -42,10 +48,12 @@ class CustomerOrdersScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
-                      'Your past customer orders will appear here after checkout.',
+                    Text(
+                      isAgent
+                          ? 'Orders you place for customers will appear here after checkout.'
+                          : 'Your past customer orders will appear here after checkout.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.black54),
+                      style: const TextStyle(color: Colors.black54),
                     ),
                   ],
                 ),
@@ -56,7 +64,10 @@ class CustomerOrdersScreen extends StatelessWidget {
               itemCount: orders.length,
               itemBuilder: (context, index) {
                 final order = orders[index];
-                return _CustomerOrderCard(order: order);
+                return _CustomerOrderCard(
+                  order: order,
+                  showCustomerDetails: isAgent,
+                );
               },
             ),
     );
@@ -64,9 +75,13 @@ class CustomerOrdersScreen extends StatelessWidget {
 }
 
 class _CustomerOrderCard extends StatelessWidget {
-  const _CustomerOrderCard({required this.order});
+  const _CustomerOrderCard({
+    required this.order,
+    required this.showCustomerDetails,
+  });
 
   final SweetOrder order;
+  final bool showCustomerDetails;
 
   @override
   Widget build(BuildContext context) {
@@ -84,15 +99,26 @@ class _CustomerOrderCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text('Total: ₹${order.totalAmount.toStringAsFixed(0)}'),
             const SizedBox(height: 6),
-            Text('Status: ${order.status == OrderStatus.placed ? 'Order Placed' : 'Confirmed'}'),
+            Text(
+                'Status: ${order.status == OrderStatus.placed ? 'Order Placed' : 'Confirmed'}'),
             const SizedBox(height: 6),
-            Text('Payment: ${order.paymentMethod == PaymentMethod.cashOnDelivery ? 'Cash on Delivery' : ''}'),
+            Text(
+                'Payment: ${order.paymentMethod == PaymentMethod.cashOnDelivery ? 'Cash on Delivery' : ''}'),
+            if (showCustomerDetails) ...[
+              const SizedBox(height: 6),
+              Text('Customer: ${order.customerName}'),
+              const SizedBox(height: 6),
+              Text('Mobile: ${order.customerPhone}'),
+              const SizedBox(height: 6),
+              Text('Address: ${order.deliveryAddress}'),
+            ],
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: order.items
-                  .map((item) => Chip(label: Text('${item.sweet.name} x${item.quantity}')))
+                  .map((item) =>
+                      Chip(label: Text('${item.sweet.name} x${item.quantity}')))
                   .toList(),
             ),
           ],

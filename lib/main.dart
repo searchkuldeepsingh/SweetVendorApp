@@ -50,7 +50,7 @@ class SweetMartApp extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          floatingActionButtonTheme: FloatingActionButtonThemeData(
+          floatingActionButtonTheme: const FloatingActionButtonThemeData(
             backgroundColor: Colors.deepOrange,
             foregroundColor: Colors.white,
           ),
@@ -77,47 +77,47 @@ class SweetMartApp extends StatelessWidget {
           '/home': (context) => _buildProtectedScreen(
                 context,
                 const HomeScreen(),
-                requiredRole: UserRole.customer,
+                allowedRoles: const {UserRole.customer, UserRole.agent},
               ),
           '/cart': (context) => _buildProtectedScreen(
                 context,
                 const CartScreen(),
-                requiredRole: UserRole.customer,
+                allowedRoles: const {UserRole.customer, UserRole.agent},
               ),
           '/my-orders': (context) => _buildProtectedScreen(
                 context,
                 const CustomerOrdersScreen(),
-                requiredRole: UserRole.customer,
+                allowedRoles: const {UserRole.customer, UserRole.agent},
               ),
           '/profile': (context) => _buildProtectedScreen(
                 context,
                 const ProfileScreen(),
-                requiredRole: UserRole.customer,
+                allowedRoles: const {UserRole.customer, UserRole.agent},
               ),
           '/payments': (context) => _buildProtectedScreen(
                 context,
                 const PaymentsScreen(),
-                requiredRole: UserRole.customer,
+                allowedRoles: const {UserRole.customer, UserRole.agent},
               ),
           '/checkout': (context) => _buildProtectedScreen(
                 context,
                 const CheckoutScreen(),
-                requiredRole: UserRole.customer,
+                allowedRoles: const {UserRole.customer, UserRole.agent},
               ),
           '/vendor-orders': (context) => _buildProtectedScreen(
                 context,
                 const VendorOrdersScreen(),
-                requiredRole: UserRole.vendor,
+                allowedRoles: const {UserRole.vendor},
               ),
           '/vendor-profile': (context) => _buildProtectedScreen(
                 context,
                 const ProfileScreen(),
-                requiredRole: UserRole.vendor,
+                allowedRoles: const {UserRole.vendor},
               ),
           '/vendor-payments': (context) => _buildProtectedScreen(
                 context,
                 const PaymentsScreen(),
-                requiredRole: UserRole.vendor,
+                allowedRoles: const {UserRole.vendor},
               ),
         },
         onGenerateRoute: (settings) {
@@ -125,8 +125,8 @@ class SweetMartApp extends StatelessWidget {
             return MaterialPageRoute(
               builder: (context) {
                 final authProvider = context.watch<AuthProvider>();
-                final hasAccess = authProvider.isLoggedIn &&
-                    authProvider.currentRole == UserRole.customer;
+                final hasAccess =
+                    authProvider.isLoggedIn && authProvider.canShop;
                 if (!hasAccess) {
                   return const LoginScreen();
                 }
@@ -145,11 +145,11 @@ class SweetMartApp extends StatelessWidget {
   static Widget _buildProtectedScreen(
     BuildContext context,
     Widget child, {
-    required UserRole requiredRole,
+    required Set<UserRole> allowedRoles,
   }) {
     final authProvider = context.watch<AuthProvider>();
     final hasAccess = authProvider.isLoggedIn &&
-        authProvider.currentRole == requiredRole;
+        allowedRoles.contains(authProvider.currentRole);
     return hasAccess ? child : const LoginScreen();
   }
 }
